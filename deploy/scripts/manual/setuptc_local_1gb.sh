@@ -9,11 +9,12 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+#设置server端的个数
 n_Servers=$1
 n_Nodes=$((n_Servers))
 
 all_nodes=$(./nodes.sh)
-
+# 普通数组， delare -A 才是关联数组
 declare -a nodes
 
 idx=0
@@ -33,6 +34,7 @@ fi
 echo -e "${GREEN}Nodes: $NC${nodes[*]}"
 
 echo Setting up TC...
+
 
 print_and_exec() {
   node=$1

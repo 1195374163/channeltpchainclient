@@ -12,6 +12,8 @@ zoo_url="localhost"
 ring_insts=60
 start_run=1
 
+
+#读取命令行参数，匹配的放入对应变量中，不匹配的重新放回命令行参数可以使用  $1  $2 访问
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -80,6 +82,8 @@ while [[ $# -gt 0 ]]; do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
+
+# 判断以下值不能为空
 if [[ -z "${exp_name}" ]]; then
   echo "exp_name not set"
   exit
@@ -113,12 +117,19 @@ if [[ -z "${n_threads_arg}" ]]; then
   exit
 fi
 
+
+#得到节点数
 all_nodes=$(./nodes.sh)
 
-start_date=$(date +"%H:%M:%S")
-n_nodes=$(wc -l <<<"$all_nodes")
 
+#时间
+start_date=$(date +"%H:%M:%S")
+#节点数
+n_nodes=$(wc -l <<<"$all_nodes")
+#读取客户端节点 client_nodes存放的是
 mapfile -t client_nodes < <(tail -n "$n_clients" <<<"$all_nodes")
+
+# 将参数转换为对应数组
 IFS=', ' read -r -a payloads_list <<<"$payloads_arg"
 IFS=', ' read -r -a n_servers_list <<<"$n_servers_arg"
 IFS=', ' read -r -a algs_list <<<"$algs_arg"
@@ -126,6 +137,7 @@ IFS=', ' read -r -a reads_list <<<"$reads_arg"
 IFS=', ' read -r -a threads_list <<<"$n_threads_arg"
 
 total_runs=$((n_runs * ${#payloads_list[@]} * ${#n_servers_list[@]} * ${#algs_list[@]} * ${#reads_list[@]} * ${#threads_list[@]}))
+
 
 # ----------------------------------- LOG PARAMS ------------------------------
 echo -e "$BLUE\n ---- CONFIG ----  $NC"
@@ -145,7 +157,7 @@ echo -e "$BLUE ---- END CONFIG ---- \n $NC"
 current_run=0
 
 # ----------------------------------- START EXP -------------------------------
-
+# n_runs 是3 
 for run in $(# ------------------------------------------- RUN
   seq "$start_run" $((n_runs + start_run - 1))
 ); do
@@ -157,10 +169,12 @@ for run in $(# ------------------------------------------- RUN
     quorum_size=$((n_servers / 2 + 1))
     echo -e "$GREEN -- -- - Quorum size: $NC$quorum_size"
     echo -e "$GREEN -- -- - Max concurrent fails: $NC$max_concurrent_fails"
+    #client和server 不能是同一个主机
     if ((n_clients + n_servers > n_nodes)); then
       echo -e "$RED Not enough nodes! $NC"
       exit
     fi
+    #将sever节点取出来
     mapfile -t server_nodes < <(head -n "$n_servers" <<<"$all_nodes")
     echo -e "$GREEN -- -- - Servers: $NC ${server_nodes[*]}"
     servers_without_port=""
@@ -177,7 +191,7 @@ for run in $(# ------------------------------------------- RUN
 
       for payload in "${payloads_list[@]}"; do # ------------------------- PAYLOADS
         echo -e "$GREEN -- -- -- -- STARTING PAYLOAD $NC$payload"
-
+        #算法参数
         for alg in "${algs_list[@]}"; do # ----------------------------------- ALG
           echo -e "$GREEN -- -- -- -- -- -- STARTING ALG $NC$alg"
 
@@ -191,7 +205,8 @@ for run in $(# ------------------------------------------- RUN
           for node in "${client_nodes[@]}"; do
               ssh "$node" "mkdir -p ${exp_path_client}"
           done
-
+          
+          #线程循环
           for n_threads in "${threads_list[@]}"; do # -------------------- N_THREADS
             echo -e "$GREEN -- -- -- -- -- -- -- -- STARTING THREADS $NC$n_threads"
             echo -e "$GREEN -- -- -- -- -- -- -- -- - $NC$exp_path_client/$n_threads"
@@ -226,6 +241,7 @@ for run in $(# ------------------------------------------- RUN
               sleep 0.5
               server_p_ids+=($!)
             done
+            
             sleep 8
             echo "Starting clients and waiting for them to finish"
             unset client_p_ids

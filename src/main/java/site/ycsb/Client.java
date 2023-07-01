@@ -201,7 +201,7 @@ public final class Client {
       int threadcount = Integer.parseInt(props.getProperty(THREAD_COUNT_PROPERTY, "1"));
       String dbname = props.getProperty(DB_PROPERTY, "site.ycsb.BasicDB");
       
-      // 使用了默认值0 
+      // 使用了cpu shell文件 默认值0 ，其他延迟shell文件是3000
       int target = Integer.parseInt(props.getProperty(TARGET_PROPERTY, "0"));
 
       //compute the target throughput

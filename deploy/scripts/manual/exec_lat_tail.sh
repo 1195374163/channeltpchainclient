@@ -163,7 +163,8 @@ for run in $(# ------------------------------------------- RUN
       servers_without_port=${servers_without_port}${snode}","
     done
     servers_without_port=${servers_without_port::-1}
-
+    
+    #测试链尾的延迟
     lastserver=$snode
     echo "Lastserver $lastserver"
 

@@ -164,7 +164,8 @@ for run in $(# ------------------------------------------- RUN
       servers_without_port=${servers_without_port}${snode}","
     done
     servers_without_port=${servers_without_port::-1}
-
+    
+    # 计算的是 5/2=2，数组[2] 其实数组从0开始，其实是第三个
     middleIdx=$((${#server_nodes[@]}/2))
     middleServer=${server_nodes[middleIdx]}
     echo "middleServer $middleServer"
