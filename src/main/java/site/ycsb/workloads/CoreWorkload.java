@@ -785,7 +785,8 @@ public class CoreWorkload extends Workload {
     measurements.measure("VERIFY", (int) (endTime - startTime) / 1000);
     measurements.reportStatus("VERIFY", verifyStatus);
   }
-
+  
+  //keychooser 
   long nextKeynum() {
     long keynum;
     if (keychooser instanceof ExponentialGenerator) {//在指数生成
@@ -808,7 +809,8 @@ public class CoreWorkload extends Workload {
     String keyname = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
 
     HashSet<String> fields = null;
-
+    
+    // readallfields默认为false，只读其中一个字段
     if (!readallfields) {
       // read a random field
       String fieldname = fieldnames.get(fieldchooser.nextValue().intValue());
@@ -829,6 +831,7 @@ public class CoreWorkload extends Workload {
     }
   }
 
+  
   public void doTransactionReadModifyWrite(DB db) {
     // choose a random key
     long keynum = nextKeynum();

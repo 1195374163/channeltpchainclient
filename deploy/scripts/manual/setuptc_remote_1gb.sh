@@ -39,44 +39,51 @@ print_and_exec() {
   node=$1
   cmd=$2
   echo -e "$GREEN -- $node -- $NC$cmd"
-  oarsh -n "$node" "$cmd" 2>&1 | sed "s/^/[$node] /"
+  ssh  "$node" "$cmd" 2>&1 | sed "s/^/[$node] /"
 }
 
 i=0
+# shellcheck disable=SC2095
 while read -r raw_line; do
   if [ $i -ge "$n_Nodes" ]; then
+    echo "exit-----------"
     exit
   fi
   echo -e "${RED} ${nodes[$i]}----------------------------------------------------------------------${NC}"
   echo -e "$RED Line: $NC$raw_line "
   if [[ $raw_line == \#* ]]; then  # 跳过注释
-    echo "Ignored"
+    echo "Ignored-----------"
     continue
   fi
   j=0
   IFS=', ' read -r -a line <<<"$raw_line"
-
+  # 1000  1000       -1   46   63   102  93
   download=${line[0]}
   upload=${line[1]}
 
   echo -e "${BLUE}UPLOAD $upload$NC"
-  print_and_exec "${nodes[$i]}" "sudo tc qdisc del dev eth0 root; sudo tc qdisc add dev br0 root handle 1: htb default 1"
+  #print_and_exec "${nodes[$i]}" "sudo tc qdisc del dev eth0 root && sudo tc qdisc add dev eth0 root handle 1: htb default 1"
+  print_and_exec "${nodes[$i]}" "sudo tc qdisc add dev eth0 root handle 1: htb default 1"
   cmd="sudo tc class add dev eth0 parent 1: classid 1:1 htb rate ${upload}mbit"
   print_and_exec "${nodes[$i]}" "$cmd"
-  # 剩余参数
+  # 剩余参数从2 到结尾的所有参数 类似：  -1  46  63   102  
   for n in "${line[@]:2}"; do
     if [ $i -ne $j ]; then
       if [ $j -ge "$n_Nodes" ]; then
+        echo "j大于指定数量"
         continue
       fi
       target_ip=$(getent hosts "${nodes[$j]}" | awk '{print $1}')
       echo -e "latency from ${GREEN}${nodes[$i]}${NC} to ${BLUE}${nodes[$j]}${NC} ($target_ip) is ${RED}${n}${NC}"
       cmd1="sudo tc class add dev eth0 parent 1:1 classid 1:1$j htb rate 200mbit ceil 20000mbit && "
       cmd2="sudo tc qdisc add dev eth0 parent 1:1$j netem delay ${n}ms $((n / 10))ms distribution normal && "
-      cmd3="sudo tc filter add dev eth0 protocol ip parent 1:0 prio 1 u32 match ip dst $target_ip flowid 1:1$j"
+      cmd3="sudo tc filter add dev eth0 protocol ip parent 1:0 prio 1 u32 match ip dst ${nodes[$j]} flowid 1:1$j"
+#      ssh  "${nodes[$i]}" "$cmd1$cmd2$cmd3" 2>&1 | sed "s/^/[${nodes[$i]}] /"
       print_and_exec "${nodes[$i]}" "$cmd1$cmd2$cmd3"
+    else
+      echo "没执行"
     fi
     j=$((j + 1))
   done
   i=$((i + 1))
-done <"$latency_file"
+done  <"$latency_file"
