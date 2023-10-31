@@ -477,7 +477,7 @@ public class CoreWorkload extends Workload {
     //从配置文件中fieldcount=1; k-v存储中v是个hashmap，代表v是一个字段
     fieldcount =
         Long.parseLong(p.getProperty(FIELD_COUNT_PROPERTY, FIELD_COUNT_PROPERTY_DEFAULT));
-    // 使用默认的名称：
+    // 使用默认的名称：field
     final String fieldnameprefix = p.getProperty(FIELD_NAME_PREFIX, FIELD_NAME_PREFIX_DEFAULT);
     fieldnames = new ArrayList<>();
     for (int i = 0; i < fieldcount; i++) {
@@ -497,7 +497,7 @@ public class CoreWorkload extends Workload {
     }
 
     
-    //requestdistrib参数指定是均匀分布
+    //requestdistrib参数  指定是均匀分布
     String requestdistrib =
         p.getProperty(REQUEST_DISTRIBUTION_PROPERTY, REQUEST_DISTRIBUTION_PROPERTY_DEFAULT);
     int minscanlength =
@@ -564,16 +564,16 @@ public class CoreWorkload extends Workload {
     
     
     
-    // 生成了key生成器
+    // 生成了key序列
     keysequence = new CounterGenerator(insertstart);
     // 生成操作选择器
     operationchooser = createOperationGenerator(p);
     
     
-    // 事务性insert的ksy生成器
+    // 事务性insert的ksy序列
     transactioninsertkeysequence = new AcknowledgedCounterGenerator(recordcount);
     
-    
+    // 这里是
     if (requestdistrib.compareTo("uniform") == 0) {
       keychooser = new UniformLongGenerator(insertstart, insertstart + insertcount - 1);
     } else if (requestdistrib.compareTo("exponential") == 0) {
@@ -616,7 +616,7 @@ public class CoreWorkload extends Workload {
     }
 
     
-    //字段选择器
+    //字段数量选择器
     fieldchooser = new UniformLongGenerator(0, fieldcount - 1);
     
     

@@ -42,6 +42,7 @@ public class ClientThread implements Runnable {
   private int threadcount;
   private Object workloadstate;
   private Properties props;
+  // 指定吞吐量下的每次操作的时间间隔，以ns(纳秒)为时间单位
   private long targetOpsTickNs;
   private final Measurements measurements;
   
@@ -65,7 +66,7 @@ public class ClientThread implements Runnable {
     this.workload = workload;
     this.opcount = opcount;
     opsdone = 0;
-    // 传递过来的 targetperthreadperms为-1
+    // 传递过来的 targetperthreadperms为-1，当设置
     if (targetperthreadperms > 0) {
       targetOpsPerMs = targetperthreadperms;
       targetOpsTickNs = (long) (1000000 / targetOpsPerMs);
@@ -86,13 +87,14 @@ public class ClientThread implements Runnable {
   public void setThreadCount(final int threadCount) {
     threadcount = threadCount;
   }
-  //最后
+  
+  //最后获取已执行的操作数量
   public int getOpsDone() {
     return opsdone;
   }
 
   
-  
+  //这是重头戏，
   @Override
   public void run() {
     try {
@@ -133,13 +135,14 @@ public class ClientThread implements Runnable {
         //这里执行具体的workload循环操作,直至执行达到预定的操作数，以及workload不停止
         while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
           
-          //当错误时结束循环
+          //当遇到错误时结束执行，在这里通过workload调用相应的访问操作数据库
           if (!workload.doTransaction(db, workloadstate)) {
             break;
           }
 
           opsdone++;
-          // 这里没需要，因为因为没设置让每秒的吞吐量的限制
+          
+          // 这里没需要，因为因为没设置让每秒的吞吐量的限制，但在设置每秒吞吐量时，需要
           throttleNanos(startTimeNanos);
         }
       } else {
@@ -181,7 +184,8 @@ public class ClientThread implements Runnable {
       }
     }
   }
-
+  
+  // 因为设置了指定时间的吞吐量，根据这个每次操作完等待固定间隔时间，再执行下一次操作以达到控制吞吐量的目的
   private void throttleNanos(long startTimeNanos) {
     //throttle the operations
     if (targetOpsPerMs > 0) {

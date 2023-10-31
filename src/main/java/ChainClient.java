@@ -30,15 +30,19 @@ public class ChainClient extends DB {
     private static String[] weights;
     private static double totalWeight;
     
-
     //这是这个类变量，类的所有实例共享的 存放的是异步操作的中转,发出操作等待结果
     private static final Map<Channel, Map<Integer, CompletableFuture<ResponseMessage>>> opCallbacks = new HashMap<>();
     
     
-    
-    
-    // 线程的本地变量
+    // 线程的本地变量，当前线程连接的服务端，默认是均匀分布
     private static final ThreadLocal<Channel> threadServer = new ThreadLocal<>();
+    
+    
+    
+    
+    
+    
+    
     
     //这个init()方法主要是设置线程使用与测试数据库的哪个连接通道：将结果保存在threadServer中
     @Override
@@ -47,9 +51,9 @@ public class ChainClient extends DB {
         //System.err.println(i1 + " " + Thread.currentThread().toString());
           //server是channel
         synchronized (opCallbacks) {
-            
+            //ONCE,只执行一次
           if (servers == null) {
-            //ONCE
+            //设定等待服务器的超时时间，
             timeoutMillis = Integer.parseInt(getProperties().getProperty("timeout_millis"));
             int serverPort = Integer.parseInt(getProperties().getProperty("app_server_port"));
             int nFrontends = Integer.parseInt(getProperties().getProperty("n_frontends"));
@@ -59,7 +63,6 @@ public class ChainClient extends DB {
             idCounter = new AtomicInteger(0);
             //System.err.println("My id: " + myNumber + " field length: " + getProperties().getProperty("fieldlength") +
             //    " client id: " + idCounter.get());
-            
               
             servers = new LinkedList<>();
 
@@ -83,7 +86,7 @@ public class ChainClient extends DB {
             
             //连接服务端的net框架
             EventLoopGroup workerGroup = new NioEventLoopGroup();
-            // netty的客户端
+            // 生成并设置Netty的客户端
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
@@ -96,7 +99,7 @@ public class ChainClient extends DB {
               }
             });
             
-            // 将异步结果放入一个列表
+            // 将服务器的异步返回结果连接放入一个列表
             List<ChannelFuture> connectFutures = new LinkedList<>();
             
             // 连接提供的每一台服务器
@@ -107,7 +110,7 @@ public class ChainClient extends DB {
                 //System.err.println("Connecting to " + addr + ":" + port);
                 ChannelFuture connect = b.connect(addr, port);
                 connectFutures.add(connect);
-                // 
+                //这个放的是channel实例
                 servers.add(connect.channel());
                 opCallbacks.put(connect.channel(), new ConcurrentHashMap<>());
               }

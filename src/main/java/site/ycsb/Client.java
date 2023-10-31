@@ -211,16 +211,18 @@ public final class Client {
         targetperthreadperms = targetperthread / 1000.0;
       }
 
-      //设置了
+      //设置了等待2s超时的提醒闹钟
       Thread warningthread = setupWarningThread();
       warningthread.start();
-
+  
+      
+      // 赋值衡量指标组件
       Measurements.setProperties(props);
       
       
+      // 设置工作负载
       Workload workload = getWorkload(props);
-      
-      
+      // 设置追踪组件
       final Tracer tracer = getTracer(props, workload);
 
       
@@ -232,12 +234,12 @@ public final class Client {
       //System.err.println("Starting test.");
       final CountDownLatch completeLatch = new CountDownLatch(threadcount);
       
-      // 初始化对数据库操作的客户端线程列表，只是初始化
+      // 初始化对数据库操作的客户端线程列表，只是初始化，这里的ClientThread只是一个Runnable,
       final List<ClientThread> clients = initDb(dbname, props, threadcount, targetperthreadperms,
           workload, tracer, completeLatch);
       
       
-      // status为true，周期地打印吞吐量和延迟
+      // status为true，周期地打印吞吐量和延迟，
       if (status) {
         boolean standardstatus = true;
         int statusIntervalSeconds = Integer.parseInt(props.getProperty("status.interval", "10"));
@@ -266,7 +268,7 @@ public final class Client {
         //开始时间
         st = System.currentTimeMillis();
         
-        // 启动线程
+        // 启动各个客户端线程,
         for (Thread t : threads.keySet()) {
           t.start();
         }
@@ -361,6 +363,7 @@ public final class Client {
     private static List<ClientThread> initDb(String dbname, Properties props, int threadcount,
                                              double targetperthreadperms, Workload workload, Tracer tracer,
                                              CountDownLatch completeLatch) {
+      // 显示初始化是否正常
       boolean initFailed = false;
       // 表示开启事务操作
       boolean dotransactions = Boolean.valueOf(props.getProperty(DO_TRANSACTIONS_PROPERTY, String.valueOf(true)));
@@ -570,7 +573,7 @@ public final class Client {
         System.err.print(" " + arg);
       }
       System.err.println();*/
-  // //ENTRYPOINT ["java", "-cp", "chain-client.jar:.", "site.ycsb.Client" ,"-t", "-s", "-P", "config.properties"]
+      // ENTRYPOINT ["java", "-cp", "chain-client.jar:.", "site.ycsb.Client" ,"-t", "-s", "-P", "config.properties"]
       Properties fileprops = new Properties();//读取外部配置文件的配置
       
       //命令行的参数的优先级大于配置文件的优先级:同一个属性，命令行会覆盖配置文件的参数
@@ -583,7 +586,6 @@ public final class Client {
       }
       
       
-      //
       /*
        * java -cp chain-client.jar:. site.ycsb.Client -t -s
        * -P config.properties
