@@ -124,7 +124,7 @@ public class ChainClient extends DB {
 
           
           int randIdx = -1;
-          if (totalWeight == 0) {//均匀分部
+          if (totalWeight == 0) {//均匀分部到服务器连接
             int threadId = initCounter.getAndIncrement();
             randIdx = threadId % servers.size();
           } else {

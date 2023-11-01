@@ -923,10 +923,11 @@ public class CoreWorkload extends Workload {
   //执行事务性插入
   public void doTransactionInsert(DB db) {
     
-    // choose the next key
+    // choose the next key ,只是选择key的数值部分
     long keynum = transactioninsertkeysequence.nextValue();
 
     try {
+      //生成插入的Key值
       String dbkey = CoreWorkload.buildKeyName(keynum, zeropadding, orderedinserts);
       
       HashMap<String, ByteIterator> values = buildValues(dbkey);
